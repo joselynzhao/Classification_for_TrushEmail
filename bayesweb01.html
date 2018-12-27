@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>基于贝叶斯方法的垃圾邮件检测</title>
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+    <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+    <!--<META HTTP-EQUIV="Cache-Control" CONTENT="no-cache, must-revalidate">-->
+
+
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            border: 0;
+        }
+        body{
+            /*position: fixed;*/
+            background: antiquewhite;
+            background-image: url(timg1.jpeg);
+            background-repeat:no-repeat;
+            background-size: 100%;
+            /*overflow: hidden;*/
+
+        }
+        .header{
+            width:100%;
+            height:50px;
+            padding-top:20px;
+            /*background-color: cyan;*/
+        }
+        .header h1{
+            text-align: center;
+            color: black;
+            /*margin-top:20px;*/
+        }
+        #mainbody{
+            /*position: absolute;*/
+            width: 80%;
+            height: 600px;
+            margin: 20px auto;
+            background-color:rgba(143,188,143,0.8);
+            padding-top: 20px;
+            border-radius: 20px;
+            /*opacity: 0.7;*/
+        }
+        #main_left{
+            float: left;
+            width: 60%;
+            height: 100%;
+        }
+        #main_right{
+            float: left;
+            width: 38%;
+            height: 95%;
+            background-color: rgba(211,211,211,0.5);
+        }
+        #functionbar{
+            width: 95%;
+            height: 40px;
+            margin: 0 auto;
+            background: green;
+            padding-top: 5px;
+
+
+
+
+        }
+        #contentshow textarea{
+            width: 100%;
+            margin: 0 auto;
+            height: 100%;
+            font-size: 16px;
+            padding: 3px
+
+        }
+         #contentshow{
+            width: 95%;
+             padding-top: 20px;
+            margin: 0 auto;
+            height: 500px;
+        }
+
+        .footer{
+            width:100%;
+            height:60px;
+            margin-top:20px;
+            position: fixed;
+            bottom: 0px;
+            /*background-color: cyan;*/
+        }
+        .footer p{
+            text-align: center;
+            color:black;
+        }
+        .btn{
+            width:80px;
+            height:30px;
+            background-color: green;
+            margin-top: 4px;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+            margin-left: 20px;
+            border:solid 1px white;
+            float: left;
+        }
+        .current_cut{
+            background-color: green;
+            color: white;
+        }
+        .btn:hover{
+            background-color: white;
+            color: green;
+        }
+
+        .right_title{
+            text-align: center;
+            color: #505050;
+            background-color: white;
+            width: 100%;
+            height: 30px;
+            opacity: 1;
+        }
+        .log_content{
+            /*opacity: 0.5;*/
+            width: 99%;
+            height: 540px;
+            color: green;
+            overflow: scroll;
+            box-shadow: inset grey 0px 2px 8px;
+            padding-left: 5px;
+            background-color: rgba(211,211,211,0.4);
+        }
+        .log_content pre{
+            opacity: 1;
+            font-size: 20px;
+        }
+        /*.log_content textarea{*/
+            /*width: 100%;*/
+            /*height: 540px;*/
+            /*!*overflow: scroll;*!*/
+            /*font-size: 14px;*/
+            /*background: none;*/
+            /*overflow: scroll;*/
+        /*}*/
+
+
+              /*弹出框样式 ——start*/
+        #msg{
+            width:500px;
+            position: fixed;
+            z-index:999;
+            top: 49%;
+            margin-top:-80px;
+            left:50%;
+            margin-left:-230px;
+            background:#fff;
+            box-shadow:5px 5px 8px #999;
+            font-size:17px;
+            color: green;
+            border:1px solid #f8f8f8;
+            text-align: center;
+            line-height: 2rem;
+            display:inline-block;
+            padding-bottom:20px;
+            border-radius:10px;
+        }
+        #msg_top{
+            background: darkseagreen;
+            /*background:#f8f8f8;*/
+            padding:5px 15px 5px 20px;
+            text-align:left;
+
+        }
+        #msg_top span{
+            font-size:18px;
+            float:right;
+            cursor:pointer;
+        }
+        #msg_cont{
+            padding:15px 20px 20px;
+            text-align:left;
+        }
+        .msg_clear{
+            display:inline-block;
+            color:#fff;
+            padding:1px 15px;
+            background: green;
+            border-radius:2px;
+            float:right;
+            margin-right:15px;
+            cursor:pointer;
+        }
+
+        img{
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>基于贝叶斯方法的垃圾邮件检测</h1>
+    </div>
+    <div id="mainbody">
+       <div id="main_left">
+            <div id="functionbar">
+             <div class="btn getmail">fetch</div>
+             <div class="btn checkmail">check</div>
+             <div class="btn testall">testAll</div>
+             <div class="btn trainall">trainAll</div>
+             <!--<div class="btn testone">testOne</div>-->
+            <!--<input id=b type=file webkitdirectory >-->
+            <!--<script type="text/javascript" charset="UTF-8">-->
+                <!--            -->
+                <!--    document.querySelector('#b').addEventListener('change', e => {-->
+                <!--  for (let entry of e.target.files)-->
+                <!--    console.log(entry.name, entry.webkitRelativePath);-->
+                <!--});        -->
+                <!--            -->
+                <!--            -->
+                <!--</script>-->
+<!--   -->
+
+        </div>
+            <div id="contentshow">
+             <textarea  placeholder="结果将在这里显示" disabled="disabled"></textarea>
+        </div>
+       </div>
+        <div id="main_right">
+            <div class="right_title">
+                <h3>consolo.log</h3>
+
+            </div>
+            <div class="log_content">
+                <!--<textarea   disabled="disabled"></textarea>-->
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>CopyRight@赵静、李鑫、张璋、陶梓隆</p>
+        <p>2018.10-2018.11</p>
+    </div>
+</body>
+<script type="text/javascript">
+    var current_mail_type = -1;
+    var current_mail_num = -1;
+
+    var train_normal_out = 'normal_out.txt';
+    var train_trash_out = 'trash_out.txt';
+
+    var testall_file = 'testall_out.txt';
+    var trainall_file = "trainall_out.txt";
+    var testall_ajax;
+    var trainall_ajax;
+    var get_file_log_ajax;
+
+    var b;
+    var c;
+
+    var is_testing =0;
+    var is_training = 0;
+
+    var time1;
+    var time2;
+
+       //弹出框
+    function myalert(e){
+        $("body").append('<div id="msg"><div id="msg_top">提示<span class="msg_close">×</span></div><div id="msg_cont">'+e+'</div><div class="msg_close msg_clear" id=msg_sure>确定</div></div>');
+        $(".msg_close").click(function (){
+            $("#msg").remove();
+        });
+    }
+
+    // function eva_setInterval() {
+    //     b = setInterval("load_file02(file_name)",100);
+    // }
+
+    function load_file_in_textarea(file) {
+         function ReadFile(data) {
+             $('#contentshow textarea').html(data);
+             e = $('#contentshow textarea');
+             e.scrollTop(e[0].scrollHeight);
+        }
+        var xhr = new XMLHttpRequest();
+         // xhr.setRequestHeader("Content-Type","text/xml;charset=gb18030");
+        // xhr.setRequestHeader("Content-Type","text/plain");
+        // xhr.setHeader("Access-Control-Allow-Origin", "*");
+        // xhr.setHeader("Access-Control-Allow-Methods", "POST");
+        // xhr.setHeader("Access-Control-Allow-Headers", "x-requested-with,content-type");
+        // xhr.addHeader("Access-Control-Allow-Credentials", "true");
+
+        xhr.onload = function () {
+            ReadFile(xhr.responseText);
+        };
+        try {
+            xhr.open("get",file, true);
+            xhr.send();
+        }
+        catch (ex) {
+            ReadFile(ex.message);
+            xhr.close();
+        }
+
+    }
+    function load_file_in_log(file) {
+         function ReadFile(data) {
+             $('.log_content ').html('<pre>'+data+'</pre>');
+             e = $('.log_content ');
+             e.scrollTop(e[0].scrollHeight);
+        }
+        var xhr = new XMLHttpRequest();
+           // xhr.setRequestHeader("Content-Type","text/xml;charset=gb18030");
+         // xhr.setRequestHeader("Content-Type","text/plain");
+        // xhr.setHeader("Access-Control-Allow-Origin", "*");
+        // xhr.setHeader("Access-Control-Allow-Methods", "POST");
+        // xhr.setHeader("Access-Control-Allow-Headers", "x-requested-with,content-type");
+        // xhr.addHeader("Access-Control-Allow-Credentials", "true");
+        xhr.onload = function () {
+            ReadFile(xhr.responseText);
+
+        };
+        try {
+            xhr.open("get",file, true);
+            xhr.send();
+        }
+        catch (ex) {
+            ReadFile(ex.message);
+            xhr.close();
+        }
+
+    }
+
+
+    function get_file_log(file_name) {
+        get_file_log_ajax = $.ajax({
+        type:'GET',
+                 url:'http://127.0.0.1:5000/get_file_log',
+                 data:{'file_name':file_name},
+                 dataType: 'json',
+                 success: function(data) {
+                     console.log("获取数据成功");
+                    var content = data.content;
+                    $('.log_content ').html('<pre>'+content+'</pre>');
+                     e = $('.log_content ');
+                     e.scrollTop(e[0].scrollHeight);
+
+        }
+
+    });
+
+    }
+    function load_gif(file_name){
+        gif_html = '<img src='+file_name+'/>';
+        // $('#contentshow').html('<canvas style="width: 100%;" src='+file_name+' ></canvas>')
+        $('#contentshow').html(gif_html);
+        // var imgs=document.getElementsByTagName('img');
+        // for (var i=0; i<imgs.length; i++){
+        //     imgs[i].src = imgs[imgs.length-1].src;
+        // }
+    }
+    function load_img_testall(){
+        gif_html = '<img src="2000.png"/>';
+        // $('#contentshow').html('<canvas style="width: 100%;" src='+file_name+' ></canvas>')
+        $('#contentshow').html(gif_html);
+        // var imgs=document.getElementsByTagName('img');
+        // for (var i=0; i<imgs.length; i++){
+        //     imgs[i].src = imgs[imgs.length-1].src;
+        // }
+    }
+    function load_img_traintest(){
+        gif_html = '<img src="traintest.png"/>';
+        // $('#contentshow').html('<canvas style="width: 100%;" src='+file_name+' ></canvas>')
+        $('#contentshow').html(gif_html);
+        // var imgs=document.getElementsByTagName('img');
+        // for (var i=0; i<imgs.length; i++){
+        //     imgs[i].src = imgs[imgs.length-1].src;
+        // }
+    }
+
+
+    $(document).ready(function () {
+        $('.testone').click(function () {
+            console.log("点击生效……");
+             if(is_testing ==1 ){
+                // 正在测试中！
+                myalert("测试正在进行中 ……");
+                load_file_in_log(testall_file);
+                return false;
+            }
+            if(is_training==1){
+                myalert("训练正在进行中 ……");
+                load_file_in_log(trainall_file);
+                return false;
+            }
+            load_gif('testone.gif');
+        });
+
+
+        $('.getmail').click(function () {
+            console.log("点击生效……");
+             if(is_testing ==1 ){
+                // 正在测试中！
+                myalert("测试正在进行中 ……");
+                load_file_in_log(testall_file);
+                return false;
+            }
+            if(is_training==1){
+                myalert("训练正在进行中 ……");
+                load_file_in_log(trainall_file);
+                return false;
+            }
+                $.ajax({
+                     type:'GET',
+                     url:'http://127.0.0.1:5000/getmail',
+                     // data:data,
+                     dataType: 'json',
+                     success: function(data) {
+                         console.log("获取数据成功");
+                        // console.log(data.content);
+                        console.log(data.mail_type);
+                        console.log(data.num);
+                        current_mail_num = data.num;
+                        current_mail_type = data.mail_type;
+                        // $('#contentshow textarea').val(data.content);
+                        content_html = '<textarea>'+data.content+'</textarea>';
+                        $('#contentshow ').html(content_html);
+
+                     }
+                 });
+
+        });
+        $('.checkmail').click(function(){
+            console.log("点击生效……");
+
+            //
+            if(current_mail_type==-1 || current_mail_num == -1 ){
+                myalert("please fecth Email first！");
+                return false;
+            }
+            $.ajax({
+                     type:'GET',
+                     url:'http://127.0.0.1:5000/checkmail',
+                     // data:data,
+                     dataType: 'json',
+                     success: function(data) {
+                         console.log("获取数据成功");
+                        console.log(data.nt);
+                        console.log(data.tt);
+                        if (data.nt>data.tt){
+                            ss = "正常邮件";
+                        }
+                        else{
+                            ss = "垃圾邮件";
+                        }
+                        if(current_mail_type == 1){
+                            kk = "正常邮件";
+                        }
+                        else if(current_mail_type==2){
+                            kk = "垃圾邮件";
+                        }
+                        if(ss==kk){
+                            rr = "正确";
+                        }
+                        else{
+                            rr = "错误";
+                        }
+                        myalert("该邮件为正常邮件的概率为"+data.nt+'<br>'+"该邮件为垃圾邮件的概率为"+data.tt+'<br>'+"因此系统判定此邮件为"+ss+'<br>'+ "该邮件实属"+kk+"，因此系统判定<b>"+rr+"</b>");
+
+                     }
+                 });
+
+        });
+        $('.testall').click(function () {
+            console.log("点击生效……");
+            time1 =window.setTimeout(load_img_testall,30000);
+            if(is_testing ==1 ){
+                // 正在测试中！
+                myalert("测试正在进行中 ……");
+                load_file_in_log(testall_file);
+                return false;
+            }
+            if(is_training==1){
+                myalert("训练正在进行中 ……");
+                load_file_in_log(trainall_file);
+                return false;
+            }
+            is_testing=1;
+            b = setInterval("get_file_log(testall_file)",50);
+            load_gif('testall.gif');
+
+            // load_gif('testall.gif');
+            //禁止fetch点击
+            current_mail_type= -1;
+            current_mail_num = -1;
+
+            testall_ajax =$.ajax({
+                     type:'GET',
+                     url:'http://127.0.0.1:5000/testAll',
+                     // data:data,
+                     dataType: 'json',
+                     success: function(data) {
+                         console.log("获取数据成功");
+                         var rate_normal = data.rate_normal;
+                         var rate_trash = data.rate_trash;
+                         myalert("对正常邮件的检测准确率为 "+rate_normal+'<br>'+"对垃圾邮件的检测准确率为"+rate_trash);
+
+                     }
+                 });
+             //终止循环读文件
+            $.when(testall_ajax).done(function () {
+                // myalert("所有测试样本已经测试完毕！");
+                is_testing = 0;
+                setTimeout("clearInterval(b)","1000");
+            });
+
+
+
+
+
+            // 循环读取文件内容
+
+        });
+        $('.trainall').click(function () {
+             console.log("点击生效……");
+             time2 =window.setTimeout(load_img_traintest,13000);
+            if(is_training ==1){
+                // 正在测试中！
+                myalert("训练正在进行中 ……");
+                load_file_in_log(trainall_file);
+                return false;
+            }
+            if(is_testing ==1){
+                   myalert("测试正在进行中 ……");
+                load_file_in_log(testall_file);
+                return false;
+            }
+            is_training=1;
+            load_gif('traintest.gif');
+            c = setInterval("get_file_log(trainall_file)",1000);
+            //禁止fetch点击
+            current_mail_type= -1;
+            current_mail_num = -1;
+            trainall_ajax =$.ajax({
+                     type:'GET',
+                     url:'http://127.0.0.1:5000/trainAll',
+                     // data:data,
+                     dataType: 'json',
+                     success: function(data) {
+                         console.log("获取数据成功");
+                         if(data.result == 1) {
+                             //训练成功！
+                             myalert("训练完成！");
+                         }
+                         else{
+                             myalert("不好意思，训练出错啦");
+                         }
+
+                     }
+                 });
+             //终止循环读文件
+            $.when(trainall_ajax).done(function () {
+                // myalert("所有测试样本已经测试完毕！");
+                is_training = 0;
+                setTimeout("clearInterval(c)","1000");
+            });
+
+        });
+
+    });
+
+
+
+
+
+</script>
+
+</html>
